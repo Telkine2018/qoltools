@@ -1,4 +1,3 @@
-
 local commons = require("scripts.commons")
 local tools = require("scripts.tools")
 local modname = commons.modname
@@ -11,7 +10,6 @@ local function get_spider_max_logistic_slots(player) return 200 end
 local function get_player_max_logistic_slots(player) return 200 end
 
 local function is_special(stack)
-
     if stack.is_blueprint then
         return true
     elseif stack.is_blueprint_book then
@@ -56,7 +54,6 @@ local function is_special(stack)
 end
 
 local function clean_inv(limits, ammo_inv, fuel_inv, trunk_inv, trash_inv)
-
     local content = {}
     local trash = {}
     local protos = {}
@@ -84,7 +81,6 @@ local function clean_inv(limits, ammo_inv, fuel_inv, trunk_inv, trash_inv)
         local stack = trunk_inv[i]
 
         if stack.valid and stack.valid_for_read then
-
             if not is_special(stack) then
                 local name = stack.name
                 local limit = limits[name] or 0
@@ -118,7 +114,6 @@ local function clean_inv(limits, ammo_inv, fuel_inv, trunk_inv, trash_inv)
 end
 
 local function clean_spider(player, spider)
-
     local trunk_inv = spider.get_inventory(defines.inventory.spider_trunk)
     local ammo_inv = spider.get_inventory(defines.inventory.spider_ammo)
     local fuel_inv = spider.get_inventory(defines.inventory.fuel)
@@ -136,11 +131,9 @@ local function clean_spider(player, spider)
     if player.mod_settings[modname .. "-clean-auto-sort"].value then
         trunk_inv.sort_and_merge()
     end
-
 end
 
 local function get_player_logistic_limits(player)
-
     local limits = {}
     for i = 1, get_player_max_logistic_slots(player) do
         local slot = player.get_personal_logistic_slot(i)
@@ -150,7 +143,6 @@ local function get_player_logistic_limits(player)
 end
 
 local function clean_player(player)
-
     local trunk_inv = player.get_inventory(defines.inventory.character_main)
     local ammo_inv = player.get_inventory(defines.inventory.character_ammo)
     local trash_inv = player.get_inventory(defines.inventory.character_trash)
@@ -160,7 +152,6 @@ local function clean_player(player)
 end
 
 local function clean_player_to_car(player, car)
-
     local trunk_inv = player.get_inventory(defines.inventory.character_main)
     local ammo_inv = player.get_inventory(defines.inventory.character_ammo)
     local trash_inv = car.get_inventory(defines.inventory.car_trunk)
@@ -174,7 +165,6 @@ local function clean_player_to_car(player, car)
 end
 
 local function on_inventory_clean(e)
-
     local player = game.players[e.player_index]
     if not player.character then return end
 
@@ -223,7 +213,6 @@ local function on_inventory_clean(e)
 end
 
 local function feed_from_inventory(from_inv, to_inv, limits, player)
-
     for i = 1, #from_inv do
         local stack = from_inv[i]
         if stack.valid and stack.valid_for_read then
@@ -270,7 +259,6 @@ local function feed_from_car(vehicle, player)
 end
 
 local function feed_from_vehicle(vehicle, player)
-
     if vehicle.type == "spider-vehicle" then
         if remote.interfaces["spidersentinel"]["get_spider_in_squad"] then
             local spiders = remote.call("spidersentinel", "get_spider_in_squad",
@@ -327,9 +315,13 @@ local function on_gui_opened(e)
 
     local entity = e.entity
     if entity then
-        if entity.type ~= "spider-vehicle" and entity.type ~= "car" and
-            entity.type ~= "locomotive" and entity.type ~= "cargo-wagon" and
-            entity.type ~= "container" and entity.type ~= "logistic-container" then
+        if entity.type ~= "spider-vehicle"
+            and entity.type ~= "car"
+            and entity.type ~= "locomotive"
+            and entity.type ~= "cargo-wagon"
+            and entity.type ~= "container"
+            and entity.type ~= "logistic-container"
+            and entity.type ~= "linked-container" then
             entity = nil
         end
     end
@@ -352,7 +344,6 @@ sort_train = function(train)
 end
 
 sort_inventory = function(player, container)
-
     if not container then return false end
 
     if container.type == "spider-vehicle" then
@@ -370,7 +361,9 @@ sort_inventory = function(player, container)
         local train = container.train
         sort_train(train)
         return true
-    elseif container.type == "container" or container.type == "logistic-container" or container.type == "linked-container"  then
+    elseif container.type == "container" 
+            or container.type == "logistic-container"
+            or container.type == "linked-container" then
         local inv = container.get_inventory(defines.inventory.chest)
         inv.sort_and_merge()
         return true
@@ -379,7 +372,6 @@ sort_inventory = function(player, container)
 end
 
 local function on_inventory_sort(e)
-
     local player = game.players[e.player_index]
     local selected = tools.get_vars(player).selected
 
