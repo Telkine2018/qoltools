@@ -15,7 +15,7 @@ table.insert(declarations, control)
 control = {
     type = "custom-input",
     name = modname .. "-sort",
-    key_sequence = "SHIFT+G",
+    key_sequence = "SHIFT + G",
     consuming = "none"
 }
 table.insert(declarations, control)
