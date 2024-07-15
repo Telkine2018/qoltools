@@ -260,7 +260,8 @@ end
 
 local function feed_from_vehicle(vehicle, player)
     if vehicle.type == "spider-vehicle" then
-        if remote.interfaces["spidersentinel"]["get_spider_in_squad"] then
+        if remote.interfaces["spidersentinel"] 
+                and remote.interfaces["spidersentinel"]["get_spider_in_squad"] then
             local spiders = remote.call("spidersentinel", "get_spider_in_squad",
                 vehicle.unit_number)
             if spiders then
