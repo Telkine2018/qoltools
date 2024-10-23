@@ -62,7 +62,7 @@ local function clean_inv(limits, ammo_inv, fuel_inv, trunk_inv, trash_inv)
         local ammo_content = ammo_inv.get_contents()
         for name, count in pairs(ammo_content) do
             content[name] = (content[name] or 0) + count
-            protos[name] = game.item_prototypes[name]
+            protos[name] = prototypes.item[name]
         end
     end
 
@@ -70,7 +70,7 @@ local function clean_inv(limits, ammo_inv, fuel_inv, trunk_inv, trash_inv)
         local fuel_content = fuel_inv.get_contents()
         for name, count in pairs(fuel_content) do
             content[name] = (content[name] or 0) + count
-            protos[name] = game.item_prototypes[name]
+            protos[name] = prototypes.item[name]
         end
     end
 
