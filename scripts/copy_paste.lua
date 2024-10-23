@@ -57,12 +57,12 @@ function copy_paste.add_detail(flow, recipe, ratio, machine)
             local amount = ratio * ingredient.amount
             local name = ingredient.name
 
-            local field = flow.add { 
-                type = "textfield", 
-                name = prefix .. "-" .. name, 
-                numeric = true, 
-                text = tostring(amount), 
-                tags = { ingredient = name } ,
+            local field = flow.add {
+                type = "textfield",
+                name = prefix .. "-" .. name,
+                numeric = true,
+                text = tostring(amount),
+                tags = { ingredient = name },
                 clear_and_focus_on_right_click = true
             }
             field.style.width = 50
@@ -95,9 +95,8 @@ function copy_paste.open(player)
         end
     end
 
-    for i = 1, chest.request_slot_count do
-        chest.clear_request_slot(i)
-    end
+
+    copy_paste.allocate_section(chest)
 
     local frame = player.gui.center.add { type = "frame", caption = { prefix .. "-dialog.production_count" }, name =
         modname .. "-copy-frame", direction = "vertical" }
@@ -131,7 +130,8 @@ function copy_paste.open(player)
 end
 
 function copy_paste.apply(chest, recipe, f_detail)
-    local index = 1
+    local section = copy_paste.allocate_section(chest)
+    local filters = {}
     for _, ingredient in pairs(recipe.ingredients) do
         if ingredient.type == "item" then
             local name  = ingredient.name
@@ -139,15 +139,19 @@ function copy_paste.apply(chest, recipe, f_detail)
             if field then
                 local amount = tonumber(field.text)
                 if amount and amount > 0 then
-                    chest.set_request_slot({ name = ingredient.name, count = amount }, index)
-                    index = index + 1
+                    table.insert(filters, {
+                        value = { type = "item", 
+                            name = ingredient.name,
+                            quality = "normal",
+                            comparator = "="
+                         },
+                        min = amount
+                    })
                 end
             end
         end
     end
-    for i = index, chest.request_slot_count do
-        chest.clear_request_slot(i)
-    end
+    section.filters = filters
 end
 
 function copy_paste.update_detail(player)
@@ -205,26 +209,51 @@ function copy_paste.valid(player)
     copy_paste.apply(info.chest, info.recipe, f_detail)
 end
 
+---@param chest LuaEntity
+---@return LuaLogisticSection?
+function copy_paste.allocate_section(chest)
+    local rpoint = chest.get_requester_point()
+    if not rpoint then return nil end
+    for i = 2, rpoint.sections_count do
+        rpoint.remove_section(1)
+    end
+    local section
+    if rpoint.sections_count == 1 then
+        section = rpoint.get_section(1)
+        section.filters = {}
+        return section
+    else
+        section = rpoint.add_section()
+        return section
+    end
+end
+
+---@param chest LuaEntity
+---@return LuaLogisticSection?
+function copy_paste.clear_sections(chest)
+    local rpoint = chest.get_requester_point()
+    if not rpoint then return nil end
+    for i = 1, rpoint.sections_count do
+        rpoint.remove_section(1)
+    end
+end
+
+
 function copy_paste.restore(player)
     local vars = tools.get_vars(player)
     local recipe = vars.saved_recipe
-    local chest = vars.saved_chest
-    local filters = vars.saved_filters
-    if not (recipe and recipe.valid and chest and chest.valid and filters) then return end
+    local chest = vars.saved_chest --[[@as LuaEntity]]
+    local saved_filters = vars.saved_filters
+    if not (recipe and recipe.valid and chest and chest.valid and saved_filters) then return end
 
-    local index = 1
-    for _, ingredient in pairs(recipe.ingredients) do
-        if ingredient.type == "item" then
-            local name   = ingredient.name
-            local amount = filters[name]
-            if amount and amount > 0 then
-                chest.set_request_slot({ name = ingredient.name, count = amount }, index)
-                index = index + 1
-            end
-        end
-    end
-    for i = index, chest.request_slot_count do
-        chest.clear_request_slot(i)
+
+    copy_paste.clear_sections(chest)
+    
+    local rpoint = chest.get_requester_point()
+    if not rpoint then return end
+    for _, def in pairs(saved_filters) do
+        local section = rpoint.add_section(def.group)
+        section.filters = def.filters
     end
 end
 
@@ -300,11 +329,11 @@ function copy_paste.try_copy_to_loader(player)
     end
 end
 
-script.on_event(commons.prefix .. "-shift-click", 
----@param e EventData.on_gui_click
-function(e)
-    copy_paste.try_copy_to_loader(game.players[e.player_index])
-end)
+script.on_event(commons.prefix .. "-shift-click",
+    ---@param e EventData.on_gui_click
+    function(e)
+        copy_paste.try_copy_to_loader(game.players[e.player_index])
+    end)
 
 
 local function on_entity_settings_pasted(e)
@@ -326,26 +355,37 @@ local function on_selected_entity_changed(e)
     local vars = tools.get_vars(player)
     vars.selected_ratio = nil
 
-    local signal = chest.get_request_slot(1) --[[@as ItemStackDefinition  ?]]
-    local ratio
-    if signal and signal.name and signal.count then
-        for _, ingredient in pairs(recipe.ingredients) do
-            if ingredient.name == signal.name and ingredient.type == 'item' then
-                ratio = signal.count / ingredient.amount
-                if ratio == 0 then ratio = 1 end
-                tools.get_vars(player).selected_ratio = ratio
-                break
+    local point = chest.get_requester_point()
+    local saved_filters = {}
+
+    if point and point.sections_count > 0 then
+        for i = 1, point.sections_count do
+            local section = point.get_section(i)
+            for _, filter in pairs(section.filters) do
+                local signal = filter.value
+                local ratio
+                if signal and signal.name and filter.min then
+                    for _, ingredient in pairs(recipe.ingredients) do
+                        if ingredient.name == signal.name and ingredient.type == 'item' then
+                            ratio = filter.min / ingredient.amount
+                            if ratio == 0 then ratio = 1 end
+                            tools.get_vars(player).selected_ratio = ratio
+                            goto found
+                        end
+                    end
+                end
             end
+        end
+        ::found::
+        for j = 1, point.sections_count do
+            local section = point.get_section(j)
+            table.insert(saved_filters, {
+                filters = section.filters,
+                group = section.group
+            })
         end
     end
 
-    local saved_filters = {}
-    for i = 1, chest.request_slot_count do
-        signal = chest.get_request_slot(i) --[[@as ItemStackDefinition  ?]]
-        if signal then
-            saved_filters[signal.name] = signal.count
-        end
-    end
 
     vars.saved_filters = saved_filters
     vars.saved_chest = chest

@@ -29,10 +29,10 @@ local strip = tools.strip
 
 function tools.get_vars(player)
 
-    local players = global.players
+    local players = storage.players
     if players == nil then
         players = {}
-        global.players = players
+        storage.players = players
     end
     local vars = players[player.index]
     if vars == nil then
@@ -44,10 +44,10 @@ end
 
 function tools.get_force_vars(force)
 
-    local forces = global.forces
+    local forces = storage.forces
     if forces == nil then
         forces = {}
-        global.forces = forces
+        storage.forces = forces
     end
     local vars = forces[force.index]
     if vars == nil then
@@ -60,8 +60,8 @@ end
 function tools.close_ui(unit_number, close_proc, field)
 
     if not field then field = "selected" end
-    if not global.players then return end
-    for index, vars in pairs(global.players) do
+    if not storage.players then return end
+    for index, vars in pairs(storage.players) do
         local selected = vars[field]
         if selected and selected.valid and selected.unit_number == unit_number then
 
@@ -73,8 +73,8 @@ function tools.close_ui(unit_number, close_proc, field)
 end
 
 function tools.get_id()
-    local id = global.id or 1
-    global.id = id + 1
+    local id = storage.id or 1
+    storage.id = id + 1
     return id
 end
 
