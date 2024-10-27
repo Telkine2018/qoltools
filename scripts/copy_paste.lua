@@ -14,7 +14,9 @@ function copy_paste.get_info(player)
     local machine = player.entity_copy_source
     if machine and machine.type == "assembling-machine" then
         local selected = player.selected
-        if not selected or not selected.valid then return nil end
+        if not selected or not selected.valid then 
+            return nil 
+        end
 
         if selected.type ~= "logistic-container" or
             (selected.prototype.logistic_mode ~= "requester" and selected.prototype.logistic_mode ~= "buffer") then
