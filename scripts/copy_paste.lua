@@ -6,11 +6,20 @@ local prefix = modname
 
 local copy_paste = {}
 
+---@class CopyInfo
+---@field  machine LuaEntity
+---@field recipe LuaRecipe
+---@field chest LuaEntity
+---@field quality LuaQualityPrototype
+
 ---@param player any
 ---@return LuaEntity?
 ---@return LuaRecipe?
 ---@return LuaEntity?
+---@return LuaQualityPrototype?
 function copy_paste.get_info(player)
+
+    ---@type LuaEntity
     local machine = player.entity_copy_source
     if machine and machine.type == "assembling-machine" then
         local selected = player.selected
@@ -23,10 +32,10 @@ function copy_paste.get_info(player)
             return nil
         end
 
-        local recipe = machine.get_recipe()
+        local recipe, quality = machine.get_recipe()
         if not recipe then return nil end
 
-        return machine, recipe, selected
+        return machine, recipe, selected, quality
     end
     return nil
 end
@@ -84,7 +93,7 @@ end
 function copy_paste.open(player)
     copy_paste.close(player)
 
-    local machine, recipe, chest = copy_paste.get_info(player)
+    local machine, recipe, chest, quality = copy_paste.get_info(player)
     if not machine or not recipe or not chest then return false end
 
     local ratio = tools.get_vars(player).selected_ratio
@@ -126,12 +135,13 @@ function copy_paste.open(player)
     tools.get_vars(player).copy_info = {
         machine = machine,
         recipe = recipe,
-        chest = chest
+        chest = chest,
+        quality = quality
     }
     return true
 end
 
-function copy_paste.apply(chest, recipe, f_detail)
+function copy_paste.apply(chest, recipe, f_detail, quality)
     local section = copy_paste.allocate_section(chest)
     local filters = {}
     for _, ingredient in pairs(recipe.ingredients) do
@@ -144,7 +154,7 @@ function copy_paste.apply(chest, recipe, f_detail)
                     table.insert(filters, {
                         value = { type = "item", 
                             name = ingredient.name,
-                            quality = "normal",
+                            quality = (quality and quality.name) or "normal",
                             comparator = "="
                          },
                         min = amount
@@ -162,7 +172,7 @@ function copy_paste.update_detail(player)
     local ratio = tonumber(f_ratio.text)
     if not ratio then return end
 
-
+    ---@type CopyInfo
     local info = tools.get_vars(player).copy_info
     if not info or not info.machine.valid or not info.chest.valid then return end
 
@@ -208,7 +218,7 @@ function copy_paste.valid(player)
 
     local vars = tools.get_vars(player)
     vars.saved_filters = nil
-    copy_paste.apply(info.chest, info.recipe, f_detail)
+    copy_paste.apply(info.chest, info.recipe, f_detail, info.quality)
 end
 
 ---@param chest LuaEntity
@@ -311,7 +321,7 @@ function copy_paste.try_copy_to_loader(player)
         return
     end
 
-    local recipe = machine.get_recipe() or (machine.type == "furnace" and machine.previous_recipe)
+    local recipe, quality = machine.get_recipe() 
     if not recipe then return end
 
     local ingredients = recipe.ingredients
