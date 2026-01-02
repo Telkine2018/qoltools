@@ -26,6 +26,5 @@ data:extend({
         setting_type = "runtime-per-user",
         default_value = false,
         order = "af"
-    },
-
+    }
 })
