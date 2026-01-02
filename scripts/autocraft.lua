@@ -7,7 +7,9 @@ local area_size = 40
 local function scan_sector()
     for _, player in pairs(game.players) do
         local autocraft = tools.get_vars(player).autocraft
-        if autocraft and player.controller_type == defines.controllers.character then
+        local character = player.character
+
+        if autocraft and player.controller_type == defines.controllers.character and character then
             local surface = player.surface
             local pos = player.position
 
@@ -67,6 +69,18 @@ local function scan_sector()
                     end
                 end
             end
+
+            network = character.surface.find_logistic_network_by_position(character.position, player.force_index)
+            if network then
+
+                for item, _ in pairs(needed) do
+                    local count = network.get_item_count(item)
+                    if count and count > 0 then
+                        stock[item] = (stock[item] or 0) + count
+                    end
+                end
+            end
+
 
             local proto               = player.character.prototype
             local crafting_categories = proto.crafting_categories
