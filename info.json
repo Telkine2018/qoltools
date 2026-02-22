@@ -1,11 +1,14 @@
 {
   "name": "qoltools",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "title": "Quality of life tools",
   "author": "Telkine2018",
   "contact": "",
   "homepage": "",
   "description": "Different tools for quality of life, inventory cleaning and reloading",
   "factorio_version": "2.0",
-  "dependencies": ["base >= 2.0.0" ]
+  "dependencies": [
+      "base >= 2.0.0",
+      "? EverythingOnNauvis"
+ ]
 }

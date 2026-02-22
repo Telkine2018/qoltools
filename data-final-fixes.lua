@@ -20,3 +20,20 @@ data:extend
         name = commons.prefix .. "-shift-click"
     }
 }
+
+if mods["EverythingOnNauvis"] then
+    local recipe = data.raw["recipe"]["lightning-rod"]
+    if recipe then
+        recipe.enabled = true
+        recipe.hidden = false
+        data:extend {recipe}
+        log("Install lightning-rod")
+    end
+
+    local item = data.raw["item"]["lightning-rod"]
+    if item then
+        item.send_to_orbit_mode = "automated"
+        item.default_import_location = "nauvis"
+        item.hidden = false
+    end
+end
