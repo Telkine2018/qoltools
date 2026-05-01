@@ -6,6 +6,7 @@ local png = commons.png
 
 local declarations = {}
 
+--[[
 local control = {
     type = "custom-input",
     name = modname .. "-feed",
@@ -13,6 +14,7 @@ local control = {
     consuming = "none"
 }
 table.insert(declarations, control)
+]]
 
 control = {
     type = "custom-input",

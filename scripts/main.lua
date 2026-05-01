@@ -379,7 +379,7 @@ local function on_inventory_sort(e)
     if selected and selected.valid then sort_inventory(player, selected) end
 end
 
-script.on_event(modname .. "-feed", on_inventory_feed)
+-- script.on_event(modname .. "-feed", on_inventory_feed)
 script.on_event(modname .. "-sort", on_inventory_sort)
 
 script.on_event(defines.events.on_gui_opened, on_gui_opened)
